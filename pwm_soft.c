@@ -1,67 +1,67 @@
 //#############################################################################
 //
-// ARQUIVO:    ex1_pwm_physical_software_control.c
+// ARQUIVO:    pwm_soft.c
 //
-// TÕTULO:    GeraÁ„o de PWM por Software e ConfiguraÁ„o Simulada
+// T√çTULO:    Gera√ß√£o de PWM por Software e Configura√ß√£o Simulada (vers√£o simplificada)
 //
-//! Este exemplo gera um PWM por software e simula sua configuraÁ„o via registrador.
-//! Observar o brilho do LED e vari·veis no depurador do CCS.
+//! Este exemplo gera um PWM por software e simula sua configura√ß√£o via registrador.
+//! O registrador cont√©m apenas o valor de compara√ß√£o (duty‚Äëcycle) e um bit de enable.
+//! Observar o brilho do LED e vari√°veis no depurador do CCS.
 //
 //#############################################################################
 //
-// $Data de LanÁamento: $
+// $Data de Lan√ßamento: $
 // $Copyright:
 // Copyright (C) 2013-2024 Texas Instruments Incorporated - http://www.ti.com/
 //
-// RedistribuiÁ„o e uso em formatos de cÛdigo-fonte e bin·rios, com ou sem
-// modificaÁ„o, s„o permitidos desde que as seguintes condiÁıes sejam
+// Redistribui√ß√£o e uso em formatos de c√≥digo-fonte e bin√°rios, com ou sem
+// modifica√ß√£o, s√£o permitidos desde que as seguintes condi√ß√µes sejam
 // atendidas:
 //
-//   As redistribuiÁıes do cÛdigo-fonte devem reter o aviso de direitos autorais
-//   acima, esta lista de condiÁıes e a seguinte isenÁ„o de responsabilidade.
+//   As redistribui√ß√µes do c√≥digo-fonte devem reter o aviso de direitos autorais
+//   acima, esta lista de condi√ß√µes e a seguinte isen√ß√£o de responsabilidade.
 //
-//   As redistribuiÁıes em formato bin·rio devem reproduzir o aviso de direitos autorais
-//   acima, esta lista de condiÁıes e a seguinte isenÁ„o de responsabilidade na
-//   documentaÁ„o e/ou outros materiais fornecidos com a distribuiÁ„o.
+//   As redistribui√ß√µes em formato bin√°rio devem reproduzir o aviso de direitos autorais
+//   acima, esta lista de condi√ß√µes e a seguinte isen√ß√£o de responsabilidade na
+//   documenta√ß√£o e/ou outros materiais fornecidos com a distribui√ß√£o.
 //
 //   Nem o nome da Texas Instruments Incorporated nem os nomes de
 //   seus colaboradores podem ser usados para endossar ou promover produtos derivados
-//   deste software sem permiss„o prÈvia por escrito.
+//   deste software sem permiss√£o pr√©via por escrito.
 //
-// ESTE SOFTWARE … FORNECIDO PELOS DETENTORES DOS DIREITOS AUTORAIS E COLABORADORES
-// "AS IS" E QUAISQUER GARANTIAS EXPRESSAS OU IMPLÕCITAS, INCLUINDO, MAS N√O
-// SE LIMITANDO A, AS GARANTIAS IMPLÕCITAS DE COMERCIALIZA«√O E ADEQUA«√O PARA
-// UM PROP”SITO ESPECÕFICO S√O REJEITADAS. EM NENHUM CASO O DETENTOR DOS DIREITOS AUTORAIS
-// OU COLABORADORES SER√O RESPONS¡VEIS POR QUAISQUER DANOS DIRETOS, INDIRETOS, INCIDENTAIS,
-// ESPECIAIS, EXEMPLARES OU CONSEQUENCIAIS (INCLUINDO, MAS N√O SE LIMITANDO A,
-// AQUISI«√O DE BENS OU SERVI«OS SUBSTITUTOS; PERDA DE USO, DATA OU LUCROS;
-// OU INTERRUP«√O DE NEG”CIOS) SEJA QUAL FOR A CAUSA E SOB QUALQUER TEORIA DE
-// RESPONSABILIDADE, SEJA EM CONTRATO, RESPONSABILIDADE ESTRITA OU ATO ILÕCITO
-// (INCLUINDO NEGLIG NCIA OU OUTRO) DECORRENTE DE QUALQUER FORMA DO USO DESTE
+// ESTE SOFTWARE √â FORNECIDO PELOS DETENTORES DOS DIREITOS AUTORAIS E COLABORADORES
+// "AS IS" E QUAISQUER GARANTIAS EXPRESSAS OU IMPL√çCITAS, INCLUINDO, MAS N√ÉO
+// SE LIMITANDO A, AS GARANTIAS IMPL√çCITAS DE COMERCIALIZA√á√ÉO E ADEQUA√á√ÉO PARA
+// UM PROP√ìSITO ESPEC√çFICO S√ÉO REJEITADAS. EM NENHUM CASO O DETENTOR DOS DIREITOS AUTORAIS
+// OU COLABORADORES SER√ÉO RESPONS√ÅVEIS POR QUAISQUER DANOS DIRETOS, INDIRETOS, INCIDENTAIS,
+// ESPECIAIS, EXEMPLARES OU CONSEQUENCIAIS (INCLUINDO, MAS N√ÉO SE LIMITANDO A,
+// AQUISI√á√ÉO DE BENS OU SERVI√áOS SUBSTITUTOS; PERDA DE USO, DADOS OU LUCROS;
+// OU INTERRUP√á√ÉO DE NEG√ìCIOS) SEJA QUAL FOR A CAUSA E SOB QUALQUER TEORIA DE
+// RESPONSABILIDADE, SEJA EM CONTRATO, RESPONSABILIDADE ESTRITA OU ATO IL√çCITO
+// (INCLUINDO NEGLIG√äNCIA OU OUTRO) DECORRENTE DE QUALQUER FORMA DO USO DESTE
 // SOFTWARE, MESMO SE AVISADO DA POSSIBILIDADE DE TAL DANO.
 // $
 //#############################################################################
 
-// Arquivos IncluÌdos
+// Arquivos Inclu√≠dos
 #include "driverlib.h"
 #include "device.h"
 
-// --- DefiniÁıes ---
+// --- Defini√ß√µes ---
 #define LED_GPIO_PIN        31U     // GPIO do LED2 (Azul) na LaunchPadXL
 
-#define PWM_COMPARE_MASK    0x03FFU // M·scara para bits 0-9 (valor de comparaÁ„o)
+#define PWM_COMPARE_MASK    0x03FFU // M√°scara para bits 0-9 (valor de compara√ß√£o)
 #define PWM_ENABLE_BIT      (1U << 10) // Bit 10: habilita PWM
-#define PWM_INVERT_BIT      (1U << 11) // Bit 11: inverte saÌda
 
-#define PWM_PERIOD_US       1000U   // PerÌodo total do PWM em microssegundos
+#define PWM_PERIOD_US       1000U   // Per√≠odo total do PWM em microssegundos
 
-// Vari·veis Globais (Observar no depurador)
+// Vari√°veis Globais (Observar no depurador)
 unsigned int g_pwmControlReg = 0x0000U; // Registrador de controle PWM simulado
 float g_dutyCyclePercent = 50.0F;       // Ciclo de trabalho desejado (0.0 a 100.0)
 unsigned int g_timeOn_us;               // Tempo LIGADO (LED ON)
 unsigned int g_timeOff_us;              // Tempo DESLIGADO (LED OFF)
 
-// ProtÛtipos de FunÁıes
+// Prot√≥tipos de Fun√ß√µes
 void initSystemPeripherals(void);
 void initLEDGPIO(void);
 void enablePWM(void);
@@ -71,7 +71,7 @@ unsigned int calculateCompareValueFromDutyCycle(float dutyCycle);
 void setPWMDutyCycleAndRegister(float dutyCycle);
 void generateSoftwarePWM(void);
 
-// FunÁ„o Principal
+// Fun√ß√£o Principal
 void main(void)
 {
     initSystemPeripherals();
@@ -88,7 +88,7 @@ void main(void)
     }
 }
 
-// ImplementaÁıes de FunÁıes
+// Implementa√ß√µes de Fun√ß√µes
 
 void initSystemPeripherals(void)
 {
@@ -97,8 +97,8 @@ void initSystemPeripherals(void)
     enablePWM();
     Interrupt_initModule();
     Interrupt_initVectorTable();
-    EINT; // Habilita InterrupÁıes Globais
-    ERTM; // Habilita DepuraÁ„o em Tempo Real
+    EINT; // Habilita Interrup√ß√µes Globais
+    ERTM; // Habilita Depura√ß√£o em Tempo Real
 }
 
 void initLEDGPIO(void)
@@ -118,14 +118,14 @@ void disablePWM(void)
     g_pwmControlReg = g_pwmControlReg & (~PWM_ENABLE_BIT);
 }
 
-// Calcula tempos ON/OFF a partir do valor de comparaÁ„o do registrador.
+// Calcula tempos ON/OFF a partir do valor de compara√ß√£o do registrador.
 void calculatePWMOnOffTimes(unsigned int compareValue)
 {
     g_timeOn_us = compareValue;
     g_timeOff_us = PWM_PERIOD_US - g_timeOn_us;
 }
 
-// Converte ciclo de trabalho (%) para valor de comparaÁ„o (0 a PWM_PERIOD_US).
+// Converte ciclo de trabalho (%) para valor de compara√ß√£o (0 a PWM_PERIOD_US).
 unsigned int calculateCompareValueFromDutyCycle(float dutyCycle)
 {
     if (dutyCycle < 0.0F) dutyCycle = 0.0F;
@@ -140,37 +140,30 @@ void setPWMDutyCycleAndRegister(float dutyCycle)
 
     unsigned int compareVal = calculateCompareValueFromDutyCycle(dutyCycle);
 
-    unsigned int currentConfigBits = g_pwmControlReg & (~PWM_COMPARE_MASK);
+    // Preserva o bit de enable, limpa os bits de compara√ß√£o e escreve o novo valor
+    unsigned int currentConfigBits = g_pwmControlReg & ~PWM_COMPARE_MASK;
     g_pwmControlReg = currentConfigBits | (compareVal & PWM_COMPARE_MASK);
 
     calculatePWMOnOffTimes(compareVal);
 }
 
 // Gera um ciclo da onda PWM por software no pino do LED.
+// Apenas l√≥gica normal (ativo baixo: 0 = LED ON, 1 = LED OFF).
 void generateSoftwarePWM(void)
 {
     if ((g_pwmControlReg & PWM_ENABLE_BIT) != 0U) // Se PWM habilitado
     {
-        if ((g_pwmControlReg & PWM_INVERT_BIT) != 0U) // LÛgica INVERTIDA
-        {
-            GPIO_writePin(LED_GPIO_PIN, 0); // Pino HIGH (LED OFF)
-            DEVICE_DELAY_US(g_timeOn_us);
+        // Per√≠odo ON: pino LOW -> LED aceso
+        GPIO_writePin(LED_GPIO_PIN, 0);
+        DEVICE_DELAY_US(g_timeOn_us);
 
-            GPIO_writePin(LED_GPIO_PIN, 1); // Pino LOW (LED ON)
-            DEVICE_DELAY_US(g_timeOff_us);
-        }
-        else // LÛgica NORMAL
-        {
-            GPIO_writePin(LED_GPIO_PIN, 0); // Pino LOW (LED ON)
-            DEVICE_DELAY_US(g_timeOn_us);
-
-            GPIO_writePin(LED_GPIO_PIN, 1); // Pino HIGH (LED OFF)
-            DEVICE_DELAY_US(g_timeOff_us);
-        }
+        // Per√≠odo OFF: pino HIGH -> LED apagado
+        GPIO_writePin(LED_GPIO_PIN, 1);
+        DEVICE_DELAY_US(g_timeOff_us);
     }
     else // PWM desabilitado
     {
         GPIO_writePin(LED_GPIO_PIN, 1); // LED OFF
-        DEVICE_DELAY_US(PWM_PERIOD_US); // Aguarda perÌodo completo
+        DEVICE_DELAY_US(PWM_PERIOD_US); // Aguarda per√≠odo completo
     }
 }
