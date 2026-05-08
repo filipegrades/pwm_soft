@@ -1,5 +1,5 @@
 //#############################################################################
-//F
+//
 // ARQUIVO:    pwm_soft.c
 //
 // TÍTULO:    Geração de PWM por Software e Configuração Simulada
